@@ -70,11 +70,14 @@ class Client {
         socket.ev.on("creds.update", saveCreds);
 
         socket.ev.on("messages.upsert", async (m) => {
-            const msg = m.messages[ 0 ];
-            if (msg.key.fromMe) return;
-            const message = new Message(msg, socket);
-            logger.info("New message received from " + message.sender);
-            this.command(message);
+            try {
+                const msg = m.messages[ 0 ];
+                if (msg.key.fromMe) return;
+                const message = new Message(msg, socket);
+                await this.command(message);
+            } catch (error) {
+                log.error({ error }, "Error processing message");
+            }
         })
 
     }

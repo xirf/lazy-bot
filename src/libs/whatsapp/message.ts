@@ -2,14 +2,16 @@ import { AnyMessageContent, proto, makeWASocket } from "@whiskeysockets/baileys"
 import logger from "../../utils/logger";
 
 class Message {
-    readonly message: proto.IWebMessageInfo;
-    readonly socket: ReturnType<typeof makeWASocket> | null = null;
-    readonly sender: string;
-    readonly quoted: proto.Message.IExtendedTextMessage | null = null;
-    readonly text: string | null = null;
-    readonly command: string | null = null;
-    readonly arg: string;
-    #prefix: string = process.env.PREFIX || "/";
+    protected readonly message: proto.IWebMessageInfo;
+    protected readonly socket: ReturnType<typeof makeWASocket> | null = null;
+    protected readonly sender: string;
+    protected readonly quoted: proto.Message.IExtendedTextMessage | null = null;
+    protected readonly text: string | null = null;
+    protected readonly type: string = "unknown";
+    protected readonly command: string | null = null;
+    protected readonly arg: string;
+
+    private prefix: string = process.env.PREFIX || "/";
 
     constructor(msg: proto.IWebMessageInfo, socket: ReturnType<typeof makeWASocket>) {
         this.message = msg;
@@ -21,11 +23,39 @@ class Message {
             || msg.message?.videoMessage?.caption
             || msg.message?.extendedTextMessage?.text;
 
-        if (this.text.startsWith(this.#prefix)) {
-            const [ command, ...args ] = this.text.slice(this.#prefix.length).split(" ");
+        if (this.text.startsWith(this.prefix)) {
+            const [ command, ...args ] = this.text.slice(this.prefix.length).split(" ");
 
             this.command = command;
             this.arg = args.join(" ");
+        }
+
+        const messageTypeMap = {
+            imageMessage: "image",
+            videoMessage: "video",
+            audioMessage: "audio",
+            documentMessage: "document",
+            contactMessage: "contact",
+            locationMessage: "location",
+            liveLocationMessage: "liveLocation",
+            productMessage: "product",
+            buttonsResponseMessage: "buttonsResponse",
+            buttonsMessage: "buttons",
+            listMessage: "list",
+            templateMessage: "template",
+            ephemeralMessage: "ephemeral",
+            paymentInviteMessage: "paymentInvite",
+            reactionMessage: "reaction",
+            orderMessage: "order",
+            viewOnceMessage: "viewOnce",
+            viewOnceMessageV2: "viewOnce",
+        };
+
+        for (const [ key, value ] of Object.entries(messageTypeMap)) {
+            if (this.message.message?.[ key ]) {
+                this.type = value;
+                return;
+            }
         }
     }
 
