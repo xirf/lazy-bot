@@ -49,6 +49,7 @@ class Message {
             orderMessage: "order",
             viewOnceMessage: "viewOnce",
             viewOnceMessageV2: "viewOnce",
+            poolUpdate: "poolUpdate"
         };
 
         for (const [ key, value ] of Object.entries(messageTypeMap)) {
